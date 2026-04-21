@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VoxReach AI – Smart Outreach Dashboard</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <header class="navbar">
+        <div class="navbar-brand">
+            <h1>VoxReach AI</h1>
+            <p>Smart Outreach Dashboard</p>
+        </div>
+    </header>
+
+    <main class="container">
+        <!-- Notifications -->
+        {% if error_message %}
+            <div class="alert alert-error">{{ error_message }}</div>
+        {% endif %}
+        {% if success_message %}
+            <div class="alert alert-success">{{ success_message }}</div>
+        {% endif %}
+
+        <!-- Analytics Cards -->
+        {% if results %}
+        <div class="analytics-grid">
+            <div class="card stat-card stat-total">
+                <div class="stat-icon">👥</div>
+                <div class="stat-details">
+                    <h3>Total Processed</h3>
+                    <p class="stat-value">{{ total_processed }}</p>
+                </div>
+            </div>
+            <div class="card stat-card stat-sent">
+                <div class="stat-icon">✅</div>
+                <div class="stat-details">
+                    <h3>Messages Sent</h3>
+                    <p class="stat-value">{{ messages_sent }}</p>
+                </div>
+            </div>
+            <div class="card stat-card stat-failed">
+                <div class="stat-icon">❌</div>
+                <div class="stat-details">
+                    <h3>Messages Failed</h3>
+                    <p class="stat-value">{{ messages_failed }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Upload Section -->
+        <div class="card upload-card">
+            <div class="upload-header">
+                <h2>Upload Customer Data</h2>
+                <p>Upload a .csv file containing name, phone, and interaction_history.</p>
+            </div>
+            
+            <form action="/" method="post" enctype="multipart/form-data" id="uploadForm">
+                <div class="file-drop-area" id="fileDropArea">
+                    <span class="drop-icon">📁</span>
+                    <span class="drop-text" id="dropText">Drag & Drop your CSV here or click to browse</span>
+                    <input type="file" name="file" id="fileInput" accept=".csv" required>
+                </div>
+                <!-- Loading Spinner -->
+                <div class="spinner-container hidden" id="spinnerContainer">
+                    <div class="spinner"></div>
+                    <span class="spinner-text">Processing outreach with AI...</span>
+                </div>
+                
+                <button type="submit" class="btn btn-primary" id="submitBtn">Process Outreach</button>
+            </form>
+        </div>
+
+        <!-- Results Section -->
+        {% if results %}
+        <div class="card results-card" id="resultsSection">
+            <div class="results-header">
+                <h2>Outreach Results</h2>
+                <div class="results-actions">
+                    <input type="text" id="searchInput" placeholder="Search name or phone..." class="search-input">
+                    <button class="btn btn-outline" onclick="downloadCSV()">Download CSV</button>
+                    <a href="/" class="btn btn-danger">Reset</a>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="resultsTable">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Phone</th>
+                            <th>Generated Message</th>
+                            <th>Status</th>
+                            <th>Error</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in results %}
+                        <tr>
+                            <td class="cell-name">{{ row.name }}</td>
+                            <td class="cell-phone">{{ row.phone }}</td>
+                            <td class="cell-message">
+                                <div class="message-content collapsed" id="msg-{{ loop.index }}">
+                                    {{ row.generated_message }}
+                                </div>
+                                <span class="toggle-more" onclick="toggleMessage('msg-{{ loop.index }}', this)">Show more</span>
+                            </td>
+                            <td>
+                                {% if row.delivery_status == 'sent' %}
+                                    <span class="badge badge-success">Sent</span>
+                                {% elif row.delivery_status == 'failed' %}
+                                    <span class="badge badge-danger">Failed</span>
+                                {% else %}
+                                    <span class="badge badge-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td class="cell-error">{{ row.error_message or '-' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+
+    <script src="/static/script.js"></script>
+</body>
+</html>

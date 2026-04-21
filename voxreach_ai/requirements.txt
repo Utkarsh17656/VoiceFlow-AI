@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+pandas
+openai
+requests
+pydantic-settings
+python-multipart
+python-dotenv
+twilio
+pywhatkit
