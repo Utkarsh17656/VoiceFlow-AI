@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request, File, UploadFile, Depends
+from fastapi import FastAPI, Request, File, UploadFile, Depends, Form
 from fastapi.responses import HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -9,7 +9,7 @@ import os
 from voxreach_ai.api.routes import router as api_router
 from voxreach_ai.utils.config import get_settings
 from voxreach_ai.utils.logger import logger
-from voxreach_ai.api.dependencies import get_ai_service, get_data_processor_service, get_notification_service
+from voxreach_ai.api.dependencies import get_ai_service, get_data_processor_service, get_notification_service, get_voice_service
 
 settings = get_settings()
 
@@ -50,6 +50,11 @@ if not os.path.exists(static_dir):
     os.makedirs(static_dir)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
 
+audio_dir = os.path.join(os.getcwd(), "audio")
+if not os.path.exists(audio_dir):
+    os.makedirs(audio_dir)
+app.mount("/audio", StaticFiles(directory=audio_dir), name="audio")
+
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
 
@@ -61,9 +66,11 @@ async def home(request: Request):
 async def process_outreach_ui(
     request: Request,
     file: UploadFile = File(...),
+    send_as_template: bool = Form(False),
     ai_service=Depends(get_ai_service),
     data_service=Depends(get_data_processor_service),
-    notification_service=Depends(get_notification_service)
+    notification_service=Depends(get_notification_service),
+    voice_service=Depends(get_voice_service)
 ):
     if not file.filename.endswith('.csv'):
         return templates.TemplateResponse(
@@ -80,7 +87,42 @@ async def process_outreach_ui(
         
         for result in processed_results:
             if result.generated_message:
-                success, error = notification_service.send_whatsapp_message(result.phone, result.generated_message)
+                if send_as_template:
+                    logger.info(f"Sending as template to {result.phone}, skipping audio.")
+                    result.audio_url = None
+                    success, error = notification_service.send_whatsapp_message(
+                        result.phone, 
+                        result.generated_message, 
+                        is_template=True
+                    )
+                else:
+                    audio_filename = voice_service.generate_audio(result.generated_message)
+                    if audio_filename:
+                        # Use settings.BASE_URL to ensure public URLs for Cloud API (e.g., ngrok)
+                        base_url = settings.BASE_URL.rstrip('/')
+                        # Fallback to request if settings.BASE_URL is default localhost but request is public
+                        if "localhost" in base_url and "127.0.0.1" in base_url and "ngrok" in str(request.base_url):
+                            base_url = str(request.base_url).rstrip('/')
+                            
+                        result.audio_url = f"{base_url}/audio/{audio_filename}"
+                        audio_local_path = os.path.join(os.getcwd(), "audio", audio_filename)
+                        logger.info(f"Audio URL generated: {result.audio_url}")
+                        
+                        # 1. Send the text message first
+                        message_to_send = f"Hello {result.name},\n\n{result.generated_message}"
+                        success_text, error_text = notification_service.send_whatsapp_message(result.phone, message_to_send)
+                        
+                        # 2. Send the native audio message
+                        success_audio, error_audio = notification_service.send_audio_message(result.phone, result.audio_url, audio_path=audio_local_path)
+                        
+                        # Check overall success
+                        success = success_text and success_audio
+                        error = error_audio if not success_audio else error_text
+                    else:
+                        message_to_send = result.generated_message
+                        logger.info(f"Final outreach message for {result.phone}: {message_to_send}")
+                        success, error = notification_service.send_whatsapp_message(result.phone, message_to_send)
+                        
                 result.delivery_status = "sent" if success else "failed"
                 result.error_message = error
             else:

@@ -11,3 +11,4 @@ class ProcessedCustomer(Customer):
     status: str = Field("pending", description="Processing status")
     delivery_status: str = Field("pending", description="Delivery status of the WhatsApp message")
     error_message: Optional[str] = Field(None, description="Error message if delivery failed")
+    audio_url: Optional[str] = Field(None, description="URL of the generated personalized audio message")

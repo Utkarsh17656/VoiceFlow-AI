@@ -76,6 +76,69 @@ class AIService:
             logger.error(f"Processing Error for {customer.name}: {str(e)}")
             return self._generate_fallback_message(customer)
 
+    def generate_reply_message(self, incoming_msg: str, sender_name: str = "there") -> str:
+        """
+        Generates a quick, conversational audio-native response to an incoming user message.
+        """
+        prompt = f"""
+        A user named {sender_name} just sent the following message to our AI agent:
+        ---
+        {incoming_msg}
+        ---
+        
+        Generate a friendly, natural, and concise reply.
+        Rules:
+        - It will be spoken out loud using Text-to-Speech, so write it exactly how you would speak it.
+        - Keep it brief (under 30 words).
+        - Be highly engaging and helpful.
+        """
+        
+        try:
+            if self.provider.lower() == "g4f":
+                import g4f
+                response = g4f.ChatCompletion.create(
+                    model=g4f.models.gpt_4,
+                    messages=[
+                        {"role": "system", "content": "You are a friendly voice assistant for VoxReach."},
+                        {"role": "user", "content": prompt}
+                    ]
+                )
+                message = response.strip()
+                logger.info(f"Generated voice reply via g4f")
+                return message
+
+            # OpenRouter / Standard OpenAI payload
+            response = requests.post(
+                f"{self.base_url}/chat/completions",
+                headers={
+                    "Authorization": f"Bearer {self.api_key}",
+                    "Content-Type": "application/json",
+                    "HTTP-Referer": "http://localhost:8000",
+                    "X-Title": "VoxReach AI"
+                },
+                json={
+                    "model": self.model,
+                    "messages": [
+                        {"role": "system", "content": "You are a friendly voice assistant for VoxReach."},
+                        {"role": "user", "content": prompt}
+                    ]
+                },
+                timeout=15
+            )
+            
+            if response.status_code != 200:
+                logger.error(f"AI API Error on reply: {response.status_code} - {response.text}")
+                return "I'm sorry, I'm having a little trouble thinking of what to say right now!"
+
+            data = response.json()
+            message = data["choices"][0]["message"]["content"].strip()
+            logger.info(f"Generated voice reply via {self.provider}")
+            return message
+
+        except Exception as e:
+            logger.error(f"Processing Error generating reply: {str(e)}")
+            return "Thanks for your message! I'll get back to you shortly."
+
     def _generate_fallback_message(self, customer: Customer) -> str:
         """
         Fault-tolerant fallback: Returns a high-quality standard message if AI fails.

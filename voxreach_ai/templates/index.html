@@ -63,6 +63,13 @@
                     <span class="drop-text" id="dropText">Drag & Drop your CSV here or click to browse</span>
                     <input type="file" name="file" id="fileInput" accept=".csv" required>
                 </div>
+                
+                <div style="margin: 15px 0;">
+                    <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-color);">
+                        <input type="checkbox" name="send_as_template" value="true">
+                        <span><strong>Send as Initial Template</strong> (Skips audio and sends 'test123' to open the 24-hour window)</span>
+                    </label>
+                </div>
                 <!-- Loading Spinner -->
                 <div class="spinner-container hidden" id="spinnerContainer">
                     <div class="spinner"></div>
@@ -93,6 +100,7 @@
                             <th>Phone</th>
                             <th>Generated Message</th>
                             <th>Status</th>
+                            <th>Audio</th>
                             <th>Error</th>
                         </tr>
                     </thead>
@@ -114,6 +122,13 @@
                                     <span class="badge badge-danger">Failed</span>
                                 {% else %}
                                     <span class="badge badge-warning">Pending</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                {% if row.audio_url %}
+                                    <audio controls src="{{ row.audio_url }}" style="max-width: 150px;"></audio>
+                                {% else %}
+                                    <span class="text-muted">-</span>
                                 {% endif %}
                             </td>
                             <td class="cell-error">{{ row.error_message or '-' }}</td>

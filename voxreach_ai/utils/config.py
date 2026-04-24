@@ -20,6 +20,21 @@ class Settings(BaseSettings):
     TWILIO_WHATSAPP_NUMBER: str = ""
     WHATSAPP_CLOUD_API_KEY: str = ""
     WHATSAPP_PHONE_ID: str = ""
+    WHATSAPP_VERIFY_TOKEN: str = "my_secure_webhook_token"
+    BASE_URL: str = "http://localhost:8000"
+    
+    # ElevenLabs Configuration
+    ELEVENLABS_API_KEY: str = ""
+    ELEVENLABS_VOICE_ID: str = ""
+    
+    # Voice Provider Choice ("elevenlabs" or "minimax")
+    VOICE_PROVIDER: str = "elevenlabs"
+    
+    # Minimax Configuration
+    MINIMAX_API_KEY: str = ""
+    MINIMAX_VOICE_ID: str = ""
+    MINIMAX_BASE_URL: str = "https://api.minimax.io/v1/t2a_v2"
+
 
     model_config = SettingsConfigDict(env_file=".env")
 
