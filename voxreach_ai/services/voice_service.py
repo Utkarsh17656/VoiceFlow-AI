@@ -13,7 +13,7 @@ class VoiceService:
         # ElevenLabs Settings
         self.el_api_key = settings.ELEVENLABS_API_KEY
         self.el_base_url = "https://api.elevenlabs.io/v1"
-        self.el_voice_id = settings.ELEVENLABS_VOICE_ID or "21m00Tcm4TlvDq8ikWAM"
+        self.el_voice_id = settings.ELEVENLABS_VOICE_ID or "XW7cPdbFKaf5OwuwzCWH"
         
         # Minimax Settings
         self.mm_api_key = settings.MINIMAX_API_KEY
