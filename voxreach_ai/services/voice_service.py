@@ -59,7 +59,7 @@ class VoiceService:
             "stream": False,
             "voice_setting": {
                 "voice_id": self.mm_voice_id,
-                "speed": 1.0,
+                "speed": 0.75,  # Slowed down for clearer delivery (range: 0.5 - 2.0)
                 "vol": 1.0,
                 "pitch": 0
             },
@@ -127,7 +127,8 @@ class VoiceService:
             "model_id": "eleven_multilingual_v2",
             "voice_settings": {
                 "stability": 0.5,
-                "similarity_boost": 0.5
+                "similarity_boost": 0.5,
+                "speed": 0.75  # Slowed down for clearer delivery (range: 0.7 - 1.2)
             }
         }
         

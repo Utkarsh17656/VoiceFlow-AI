@@ -19,15 +19,20 @@ class AIService:
         Generates a personalized follow-up message with fallback logic.
         """
         prompt = f"""
-        Generate a personalized, conversational outreach message for WhatsApp for:
+        Generate a strict and angry message for WhatsApp for a team member:
         Name: {customer.name}
-        History: {customer.interaction_history}
         
-        Rules for WhatsApp:
-        - Very conversational and friendly.
-        - Under 60 words.
-        - NO subject lines.
-        - NO signature placeholders like [Your Name] or [Company Name]. Just end with a simple closing question or call-to-action.
+        Core Message: "Please come on time to the team meetings."
+        
+        Rules for the message:
+        - Write in natural HINGLISH — a casual, realistic mix of Hindi and English the way educated Indian professionals actually speak and text.
+        - Use Hindi (in Roman script, NOT Devanagari) for emotions, everyday words, and connecting phrases. Example: "yaar", "bhai", "ek baar", "kab se", "seedha baat".
+        - Use English naturally for technical or formal terms. Example: "meeting", "time", "professional", "seriously", "expectations".
+        - The tone must be ANGRY and STRICT — like Sanjeev Jain Sir who is genuinely frustrated and upset about lateness.
+        - Under 40 words. Keep it punchy and direct.
+        - Do NOT start with "Hello" or any greeting. Go straight to the point.
+        - Do NOT use any signature, placeholder, or closing like [Your Name].
+        - Sound like a real WhatsApp voice note from a senior — NOT like a formal letter or an AI chatbot.
         """
         
         try:
@@ -88,9 +93,12 @@ class AIService:
         
         Generate a friendly, natural, and concise reply.
         Rules:
-        - It will be spoken out loud using Text-to-Speech, so write it exactly how you would speak it.
-        - Keep it brief (under 30 words).
-        - Be highly engaging and helpful.
+        - Write in natural HINGLISH — a mix of casual Hindi (Roman script, NOT Devanagari) and English, exactly how an educated Indian professional speaks in real life.
+        - Use Hindi for warmth and emotion: words like "bilkul", "haan", "dekho", "acha", "theek hai", "zaroor".
+        - Use English naturally for context and clarity: "absolutely", "sure", "let me know", "connect", "team".
+        - It will be spoken by Sanjeev Jain Sir via Text-to-Speech — write it like how HE would casually speak, warm but authoritative.
+        - Keep it brief (under 30 words). No greeting needed — go straight to the reply.
+        - Sound like a real voice note, NOT a formal message or AI response.
         """
         
         try:
@@ -144,9 +152,8 @@ class AIService:
         Fault-tolerant fallback: Returns a high-quality standard message if AI fails.
         """
         return (
-            f"Hi {customer.name}, we've been following your recent interest in our services. "
-            f"We'd love to discuss how we can help you scale based on your history with us. "
-            f"Are you available for a quick chat this week?"
+            f"{customer.name}, मीटिंग में समय पर आना सीखो! "
+            f"देरी अब बर्दाश्त नहीं की जाएगी। अगली बार से वक्त का ध्यान रखो।"
         )
 
     def process_batch(self, customers: List[Customer]) -> List[ProcessedCustomer]:

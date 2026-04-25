@@ -105,6 +105,7 @@ class NotificationService:
                     }
                 }
             }
+
         else:
             # Standard dynamic text message
             payload = {

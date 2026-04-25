@@ -108,19 +108,18 @@ async def process_outreach_ui(
                         audio_local_path = os.path.join(os.getcwd(), "audio", audio_filename)
                         logger.info(f"Audio URL generated: {result.audio_url}")
                         
-                        # 1. Send the text message first
-                        message_to_send = f"Hello {result.name},\n\n{result.generated_message}"
-                        success_text, error_text = notification_service.send_whatsapp_message(result.phone, message_to_send)
+                        # Step 1: Silently open the 24hr WhatsApp session via template (required by Meta policy).
+                        # This does NOT deliver any visible content — it just unlocks the session window.
+                        logger.info(f"Opening WhatsApp session via template for {result.phone} (silent session opener).")
+                        notification_service.send_whatsapp_message(result.phone, "", is_template=True)
                         
-                        # 2. Send the native audio message
-                        success_audio, error_audio = notification_service.send_audio_message(result.phone, result.audio_url, audio_path=audio_local_path)
-                        
-                        # Check overall success
-                        success = success_text and success_audio
-                        error = error_audio if not success_audio else error_text
+                        # Step 2: Send ONLY the audio — no plain text is ever delivered to the customer.
+                        logger.info(f"Sending audio-only message to {result.phone}.")
+                        success, error = notification_service.send_audio_message(result.phone, result.audio_url, audio_path=audio_local_path)
                     else:
+                        # Fallback: audio generation failed, send plain text as a last resort
+                        logger.warning(f"Audio generation failed for {result.phone}. Falling back to plain text.")
                         message_to_send = result.generated_message
-                        logger.info(f"Final outreach message for {result.phone}: {message_to_send}")
                         success, error = notification_service.send_whatsapp_message(result.phone, message_to_send)
                         
                 result.delivery_status = "sent" if success else "failed"
