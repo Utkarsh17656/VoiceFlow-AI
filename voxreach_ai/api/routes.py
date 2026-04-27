@@ -1,3 +1,4 @@
+import os
 from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, Query, Response, BackgroundTasks, Form
 from typing import List, Dict, Any
 import uuid
@@ -18,25 +19,53 @@ async def health_check():
 @router.post("/process-outreach", response_model=OutreachBatchResponse)
 async def process_outreach(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile = File(None),
     send_as_template: bool = Form(False),
+    google_sheet_url: str = Form(None),
     ai_service=Depends(get_ai_service),
     data_service=Depends(get_data_processor_service),
     notification_service=Depends(get_notification_service),
     voice_service=Depends(get_voice_service)
 ):
     """
-    Upload a CSV and generate personalized outreach messages.
+    Generate personalized outreach messages from multiple input sources:
+      - CSV file  (.csv)
+      - Excel file (.xlsx)
+      - Google Sheets public CSV export URL (via google_sheet_url form field)
+
+    When google_sheet_url is supplied it takes precedence over an uploaded file.
     """
-    if not file.filename.endswith('.csv'):
-        raise HTTPException(status_code=400, detail="Invalid file format. Please upload a CSV.")
+    # --- Validate that at least one input source was provided ---
+    if not google_sheet_url and (file is None or not file.filename):
+        raise HTTPException(
+            status_code=400,
+            detail="Provide either a file (.csv / .xlsx) or a google_sheet_url.",
+        )
+
+    # --- Validate uploaded file extension when no Sheet URL given ---
+    if not google_sheet_url and file and file.filename:
+        lower_name = file.filename.lower()
+        if not (lower_name.endswith(".csv") or lower_name.endswith(".xlsx") or lower_name.endswith(".xls")):
+            raise HTTPException(
+                status_code=400,
+                detail="Invalid file format. Please upload a .csv or .xlsx file.",
+            )
 
     try:
-        content = await file.read()
-        logger.info(f"Received file: {file.filename}")
-        
-        # 1. Parse CSV
-        customers = data_service.parse_csv(content)
+        # 1. Parse input — dispatch to correct reader
+        if google_sheet_url:
+            logger.info(f"Processing Google Sheet URL: {google_sheet_url}")
+            customers = data_service.parse(sheet_url=google_sheet_url)
+        else:
+            content = await file.read()
+            logger.info(f"Received file: {file.filename} ({len(content)} bytes)")
+            customers = data_service.parse(file_content=content, filename=file.filename)
+
+        if not customers:
+            raise HTTPException(
+                status_code=422,
+                detail="No valid customer records found in the provided input.",
+            )
         
         # 2. Process with AI
         processed_results = ai_service.process_batch(customers)
@@ -53,7 +82,7 @@ async def process_outreach(
                         is_template=True
                     )
                 else:
-                    audio_filename = voice_service.generate_audio(result.generated_message)
+                    audio_filename = voice_service.generate_audio(result.generated_message, cache_key=result.interaction_history)
                     if audio_filename:
                         # Use settings.BASE_URL to ensure public URLs for Cloud API
                         base_url = settings.BASE_URL.rstrip('/')

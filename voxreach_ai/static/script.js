@@ -1,160 +1,174 @@
 document.addEventListener("DOMContentLoaded", () => {
-    
-    // File Drag and Drop functionality
-    const fileDropArea = document.getElementById("fileDropArea");
-    const fileInput = document.getElementById("fileInput");
-    const dropText = document.getElementById("dropText");
-    const uploadForm = document.getElementById("uploadForm");
-    const submitBtn = document.getElementById("submitBtn");
+
+    const fileDropArea    = document.getElementById("fileDropArea");
+    const fileInput       = document.getElementById("fileInput");
+    const dropText        = document.getElementById("dropText");
+    const uploadForm      = document.getElementById("uploadForm");
+    const submitBtn       = document.getElementById("submitBtn");
     const spinnerContainer = document.getElementById("spinnerContainer");
+    const sheetUrlInput   = document.getElementById("sheetUrlInput");
 
-    // Prevent default drag behaviors
-    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        fileDropArea.addEventListener(eventName, preventDefaults, false);
-    });
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
+    // ── File type validation helper ────────────────────────────────────────
+    function isValidFileType(filename) {
+        const name = filename.toLowerCase();
+        return name.endsWith('.csv') || name.endsWith('.xlsx') || name.endsWith('.xls');
     }
 
-    // Highlight drop area when item is dragged over it
+    // ── Drag-and-drop ──────────────────────────────────────────────────────
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        fileDropArea.addEventListener(eventName, e => {
+            e.preventDefault();
+            e.stopPropagation();
+        }, false);
+    });
+
     ['dragenter', 'dragover'].forEach(eventName => {
-        fileDropArea.addEventListener(eventName, () => {
-            fileDropArea.classList.add('dragover');
-        });
+        fileDropArea.addEventListener(eventName, () => fileDropArea.classList.add('dragover'));
     });
-
     ['dragleave', 'drop'].forEach(eventName => {
-        fileDropArea.addEventListener(eventName, () => {
-            fileDropArea.classList.remove('dragover');
-        });
+        fileDropArea.addEventListener(eventName, () => fileDropArea.classList.remove('dragover'));
     });
 
-    // Handle dropped files
-    fileDropArea.addEventListener('drop', (e) => {
-        let dt = e.dataTransfer;
-        let files = dt.files;
-        handleFiles(files);
+    fileDropArea.addEventListener('drop', e => {
+        const files = e.dataTransfer.files;
+        if (files.length) {
+            fileInput.files = files;
+            handleFileSelected(files[0]);
+        }
     });
 
-    // Handle file input change
-    fileInput.addEventListener('change', function() {
-        handleFiles(this.files);
+    // ── File input change ──────────────────────────────────────────────────
+    fileInput.addEventListener('change', function () {
+        if (this.files.length) handleFileSelected(this.files[0]);
     });
 
-    function handleFiles(files) {
-        if (files.length > 0) {
-            const fileName = files[0].name;
-            if(fileName.endsWith('.csv')) {
-                dropText.textContent = fileName;
-                dropText.classList.add('file-chosen');
-            } else {
-                dropText.textContent = "Error: Please upload a .csv file";
-                dropText.classList.remove('file-chosen');
-                dropText.style.color = "red";
-                fileInput.value = ""; // Clear invalid file
+    function handleFileSelected(file) {
+        if (isValidFileType(file.name)) {
+            dropText.textContent = file.name;
+            dropText.classList.add('file-chosen');
+            dropText.style.color = '';
+            // Clear the sheet URL so only the file is used
+            if (sheetUrlInput) {
+                sheetUrlInput.value = '';
+                sheetUrlInput.classList.remove('has-value');
             }
+        } else {
+            dropText.textContent = 'Error: Please upload a .csv or .xlsx file';
+            dropText.classList.remove('file-chosen');
+            dropText.style.color = 'red';
+            fileInput.value = '';
         }
     }
 
-    // Form Submit functionality
-    if(uploadForm) {
-        uploadForm.addEventListener('submit', (e) => {
-            // Check if file is selected
-            if (!fileInput.files.length) {
+    // ── Google Sheet URL input — clear file if user types a URL ───────────
+    if (sheetUrlInput) {
+        sheetUrlInput.addEventListener('input', function () {
+            if (this.value.trim()) {
+                // Clear the file so only the URL is used
+                fileInput.value = '';
+                dropText.textContent = 'Drag & Drop your CSV or Excel file here or click to browse';
+                dropText.classList.remove('file-chosen');
+                dropText.style.color = '';
+                this.classList.add('has-value');
+            } else {
+                this.classList.remove('has-value');
+            }
+        });
+    }
+
+    // ── Form submit validation ─────────────────────────────────────────────
+    if (uploadForm) {
+        uploadForm.addEventListener('submit', e => {
+            const hasFile  = fileInput.files.length > 0;
+            const sheetUrl = sheetUrlInput ? sheetUrlInput.value.trim() : '';
+            const hasSheet = sheetUrl.length > 0;
+
+            // Must have at least one source
+            if (!hasFile && !hasSheet) {
                 e.preventDefault();
-                alert("Please select a file first.");
+                alert('Please select a .csv / .xlsx file OR paste a Google Sheets URL.');
                 return;
             }
-            
-            // Show spinner
-            fileDropArea.style.display = "none";
+
+            // Validate file type if a file was chosen
+            if (hasFile && !isValidFileType(fileInput.files[0].name)) {
+                e.preventDefault();
+                alert('Invalid file type. Please upload a .csv or .xlsx file.');
+                return;
+            }
+
+            // Basic URL check for Google Sheet
+            if (hasSheet && !sheetUrl.includes('docs.google.com/spreadsheets')) {
+                e.preventDefault();
+                alert('That does not look like a valid Google Sheets URL. Please check and try again.');
+                return;
+            }
+
+            // Show loading state
+            fileDropArea.style.display = 'none';
+            if (sheetUrlInput && sheetUrlInput.closest('.sheet-url-section')) {
+                sheetUrlInput.closest('.sheet-url-section').style.display = 'none';
+                // also hide OR divider
+                const divider = document.querySelector('.or-divider');
+                if (divider) divider.style.display = 'none';
+            }
             submitBtn.disabled = true;
-            submitBtn.textContent = "Processing...";
+            submitBtn.textContent = 'Processing...';
             spinnerContainer.classList.remove('hidden');
         });
     }
 
-    // Table Search functionality
-    const searchInput = document.getElementById("searchInput");
-    if(searchInput) {
-        searchInput.addEventListener("input", function() {
-            const searchTerm = this.value.toLowerCase();
-            const rows = document.querySelectorAll("#resultsTable tbody tr");
-            
-            rows.forEach(row => {
-                const name = row.querySelector(".cell-name").textContent.toLowerCase();
-                const phone = row.querySelector(".cell-phone").textContent.toLowerCase();
-                
-                if(name.includes(searchTerm) || phone.includes(searchTerm)) {
-                    row.style.display = "";
-                } else {
-                    row.style.display = "none";
-                }
+    // ── Table search ───────────────────────────────────────────────────────
+    const searchInput = document.getElementById('searchInput');
+    if (searchInput) {
+        searchInput.addEventListener('input', function () {
+            const term = this.value.toLowerCase();
+            document.querySelectorAll('#resultsTable tbody tr').forEach(row => {
+                const name  = row.querySelector('.cell-name')?.textContent.toLowerCase()  || '';
+                const phone = row.querySelector('.cell-phone')?.textContent.toLowerCase() || '';
+                row.style.display = (name.includes(term) || phone.includes(term)) ? '' : 'none';
             });
         });
     }
 });
 
-// Row Message "Show more / less" functionality
+// ── Message expand / collapse ──────────────────────────────────────────────
 function toggleMessage(id, element) {
-    const msgElement = document.getElementById(id);
-    if(msgElement.classList.contains("expanded")) {
-        msgElement.classList.remove("expanded");
-        msgElement.classList.add("collapsed");
-        element.textContent = "Show more";
-    } else {
-        msgElement.classList.add("expanded");
-        msgElement.classList.remove("collapsed");
-        element.textContent = "Show less";
-    }
+    const msg = document.getElementById(id);
+    if (!msg) return;
+    const expanded = msg.classList.contains('expanded');
+    msg.classList.toggle('expanded',  !expanded);
+    msg.classList.toggle('collapsed',  expanded);
+    element.textContent = expanded ? 'Show more' : 'Show less';
 }
 
-// Download CSV functionality
+// ── Download CSV results ───────────────────────────────────────────────────
 function downloadCSV() {
-    const table = document.getElementById("resultsTable");
+    const table = document.getElementById('resultsTable');
     if (!table) return;
 
-    let csvContent = "";
-    
-    // Header
-    const headers = Array.from(table.querySelectorAll("th")).map(th => `"${th.textContent.trim()}"`);
-    csvContent += headers.join(",") + "\r\n";
-    
-    // Rows
-    const rows = Array.from(table.querySelectorAll("tbody tr")).filter(row => row.style.display !== "none"); // Only include visible rows
-    
-    rows.forEach(row => {
-        const rowData = [];
-        
-        // 1. Name
-        rowData.push(`"${row.querySelector('.cell-name').textContent.trim().replace(/"/g, '""')}"`);
-        
-        // 2. Phone
-        rowData.push(`"${row.querySelector('.cell-phone').textContent.trim().replace(/"/g, '""')}"`);
-        
-        // 3. Message (extract from the div to avoid button text)
-        const messageDiv = row.querySelector('.message-content');
-        rowData.push(`"${messageDiv.textContent.trim().replace(/"/g, '""')}"`);
-        
-        // 4. Status
-        const statusSpan = row.querySelector('.badge');
-        rowData.push(`"${statusSpan.textContent.trim()}"`);
-        
-        // 5. Error
-        rowData.push(`"${row.querySelector('.cell-error').textContent.trim().replace(/"/g, '""')}"`);
-        
-        csvContent += rowData.join(",") + "\r\n";
-    });
-    
-    // Trigger download
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement("a");
-    link.setAttribute("href", url);
-    link.setAttribute("download", "voxreach_results.csv");
-    link.style.visibility = "hidden";
+    const headers = Array.from(table.querySelectorAll('th')).map(th => `"${th.textContent.trim()}"`);
+    let csv = headers.join(',') + '\r\n';
+
+    Array.from(table.querySelectorAll('tbody tr'))
+        .filter(row => row.style.display !== 'none')
+        .forEach(row => {
+            const cols = [
+                `"${row.querySelector('.cell-name')?.textContent.trim().replace(/"/g, '""') || ''}"`,
+                `"${row.querySelector('.cell-phone')?.textContent.trim().replace(/"/g, '""') || ''}"`,
+                `"${row.querySelector('.message-content')?.textContent.trim().replace(/"/g, '""') || ''}"`,
+                `"${row.querySelector('.badge')?.textContent.trim() || ''}"`,
+                `"${row.querySelector('.cell-error')?.textContent.trim().replace(/"/g, '""') || ''}"`,
+            ];
+            csv += cols.join(',') + '\r\n';
+        });
+
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url  = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href     = url;
+    link.download = 'voxreach_results.csv';
+    link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);

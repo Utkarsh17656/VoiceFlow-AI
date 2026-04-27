@@ -4,7 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoxReach AI – Smart Outreach Dashboard</title>
-    <link rel="stylesheet" href="/static/styles.css">
+    <meta name="description" content="VoxReach AI – Upload CSV or Excel to generate personalized AI-powered WhatsApp outreach messages.">
+    <link rel="stylesheet" href="/static/styles.css?v=3">
 </head>
 <body>
     <header class="navbar">
@@ -54,28 +55,52 @@
         <div class="card upload-card">
             <div class="upload-header">
                 <h2>Upload Customer Data</h2>
-                <p>Upload a .csv file containing name, phone, and interaction_history.</p>
+                <p>Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file — or paste a <strong>Google Sheets</strong> link — containing <code>name</code>, <code>phone</code>, and <code>history</code> columns.</p>
             </div>
-            
+
             <form action="/" method="post" enctype="multipart/form-data" id="uploadForm">
+
+                <!-- File Upload -->
                 <div class="file-drop-area" id="fileDropArea">
                     <span class="drop-icon">📁</span>
-                    <span class="drop-text" id="dropText">Drag & Drop your CSV here or click to browse</span>
-                    <input type="file" name="file" id="fileInput" accept=".csv" required>
+                    <span class="drop-text" id="dropText">Drag &amp; Drop your CSV or Excel file here or click to browse</span>
+                    <input type="file" name="file" id="fileInput" accept=".csv,.xlsx,.xls">
                 </div>
-                
-                <div style="margin: 15px 0;">
+
+                <!-- OR Divider -->
+                <div class="or-divider">
+                    <span>OR</span>
+                </div>
+
+                <!-- Google Sheet URL -->
+                <div class="sheet-url-section">
+                    <label class="sheet-url-label" for="sheetUrlInput">
+                        📊 Paste a Google Sheets URL
+                    </label>
+                    <input
+                        type="url"
+                        name="google_sheet_url"
+                        id="sheetUrlInput"
+                        class="sheet-url-input"
+                        placeholder="https://docs.google.com/spreadsheets/d/..."
+                        autocomplete="off"
+                    >
+                    <p class="sheet-url-hint">The sheet must be shared as <em>Anyone with the link can view</em>. Both edit and share URLs work.</p>
+                </div>
+
+                <div style="margin: 18px 0 6px 0;">
                     <label style="display: flex; align-items: center; gap: 8px; cursor: pointer; color: var(--text-color);">
                         <input type="checkbox" name="send_as_template" value="true">
                         <span><strong>Send as Initial Template</strong> (Skips audio and sends 'test123' to open the 24-hour window)</span>
                     </label>
                 </div>
+
                 <!-- Loading Spinner -->
                 <div class="spinner-container hidden" id="spinnerContainer">
                     <div class="spinner"></div>
                     <span class="spinner-text">Processing outreach with AI...</span>
                 </div>
-                
+
                 <button type="submit" class="btn btn-primary" id="submitBtn">Process Outreach</button>
             </form>
         </div>
@@ -141,6 +166,6 @@
         {% endif %}
     </main>
 
-    <script src="/static/script.js"></script>
+    <script src="/static/script.js?v=3"></script>
 </body>
 </html>

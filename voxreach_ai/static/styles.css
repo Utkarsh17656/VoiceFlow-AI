@@ -371,3 +371,64 @@ tbody tr:hover {
 .badge-success { background-color: #d1fae5; color: #065f46; }
 .badge-danger { background-color: #fee2e2; color: #991b1b; }
 .badge-warning { background-color: #fef3c7; color: #92400e; }
+
+/* OR Divider */
+.or-divider {
+    display: flex;
+    align-items: center;
+    text-align: center;
+    margin: 1.25rem 0;
+    color: var(--text-muted);
+    font-size: 0.8rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+.or-divider::before,
+.or-divider::after {
+    content: '';
+    flex: 1;
+    border-bottom: 1px solid var(--border-color);
+}
+.or-divider::before { margin-right: 0.75rem; }
+.or-divider::after  { margin-left:  0.75rem; }
+
+/* Google Sheets URL input */
+.sheet-url-section {
+    text-align: left;
+    margin-bottom: 0.5rem;
+}
+.sheet-url-label {
+    display: block;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: var(--text-main);
+    margin-bottom: 0.5rem;
+}
+.sheet-url-input {
+    width: 100%;
+    padding: 0.7rem 1rem;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius);
+    font-size: 0.9rem;
+    color: var(--text-main);
+    background: #f8fafc;
+    outline: none;
+    transition: var(--transition);
+    box-sizing: border-box;
+}
+.sheet-url-input:focus {
+    border-color: var(--primary-color);
+    background: #fff;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+.sheet-url-input.has-value {
+    border-color: var(--primary-color);
+    background: #eff6ff;
+}
+.sheet-url-hint {
+    font-size: 0.775rem;
+    color: var(--text-muted);
+    margin: 0.4rem 0 0 0;
+    text-align: left;
+}

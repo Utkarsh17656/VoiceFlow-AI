@@ -65,24 +65,50 @@ async def home(request: Request):
 @app.post("/", response_class=HTMLResponse)
 async def process_outreach_ui(
     request: Request,
-    file: UploadFile = File(...),
+    file: UploadFile = File(None),
     send_as_template: bool = Form(False),
+    google_sheet_url: str = Form(None),
     ai_service=Depends(get_ai_service),
     data_service=Depends(get_data_processor_service),
     notification_service=Depends(get_notification_service),
     voice_service=Depends(get_voice_service)
 ):
-    if not file.filename.endswith('.csv'):
+    # --- Validate: need at least one input source ---
+    has_file = file and file.filename
+    has_sheet = bool(google_sheet_url and google_sheet_url.strip())
+
+    if not has_file and not has_sheet:
         return templates.TemplateResponse(
-            "index.html", 
-            {"request": request, "error_message": "Invalid file format. Please upload a CSV."}
+            "index.html",
+            {"request": request, "error_message": "Please upload a file (.csv / .xlsx) or provide a Google Sheets URL."}
         )
 
+    # --- Validate file extension when a file is uploaded ---
+    if has_file and not has_sheet:
+        lower_name = file.filename.lower()
+        if not (lower_name.endswith(".csv") or lower_name.endswith(".xlsx") or lower_name.endswith(".xls")):
+            return templates.TemplateResponse(
+                "index.html",
+                {"request": request, "error_message": "Invalid file format. Please upload a .csv or .xlsx file."}
+            )
+
     try:
-        content = await file.read()
-        logger.info(f"UI received file: {file.filename}")
-        
-        customers = data_service.parse_csv(content)
+        # --- Parse input via unified dispatcher ---
+        if has_sheet:
+            sheet_url = google_sheet_url.strip()
+            logger.info(f"UI processing Google Sheet: {sheet_url}")
+            customers = data_service.parse(sheet_url=sheet_url)
+        else:
+            content = await file.read()
+            logger.info(f"UI received file: {file.filename} ({len(content)} bytes)")
+            customers = data_service.parse(file_content=content, filename=file.filename)
+
+        if not customers:
+            return templates.TemplateResponse(
+                "index.html",
+                {"request": request, "error_message": "No valid customer records found. Check that phone numbers are present."}
+            )
+
         processed_results = ai_service.process_batch(customers)
         
         for result in processed_results:
@@ -96,7 +122,7 @@ async def process_outreach_ui(
                         is_template=True
                     )
                 else:
-                    audio_filename = voice_service.generate_audio(result.generated_message)
+                    audio_filename = voice_service.generate_audio(result.generated_message, cache_key=result.interaction_history)
                     if audio_filename:
                         # Use settings.BASE_URL to ensure public URLs for Cloud API (e.g., ngrok)
                         base_url = settings.BASE_URL.rstrip('/')
@@ -109,18 +135,16 @@ async def process_outreach_ui(
                         logger.info(f"Audio URL generated: {result.audio_url}")
                         
                         # Step 1: Silently open the 24hr WhatsApp session via template (required by Meta policy).
-                        # This does NOT deliver any visible content — it just unlocks the session window.
                         logger.info(f"Opening WhatsApp session via template for {result.phone} (silent session opener).")
                         notification_service.send_whatsapp_message(result.phone, "", is_template=True)
                         
-                        # Step 2: Send ONLY the audio — no plain text is ever delivered to the customer.
+                        # Step 2: Send ONLY the audio
                         logger.info(f"Sending audio-only message to {result.phone}.")
                         success, error = notification_service.send_audio_message(result.phone, result.audio_url, audio_path=audio_local_path)
                     else:
-                        # Fallback: audio generation failed, send plain text as a last resort
+                        # Fallback: audio generation failed, send plain text
                         logger.warning(f"Audio generation failed for {result.phone}. Falling back to plain text.")
-                        message_to_send = result.generated_message
-                        success, error = notification_service.send_whatsapp_message(result.phone, message_to_send)
+                        success, error = notification_service.send_whatsapp_message(result.phone, result.generated_message)
                         
                 result.delivery_status = "sent" if success else "failed"
                 result.error_message = error
