@@ -19,20 +19,22 @@ class AIService:
         Generates a personalized follow-up message with fallback logic.
         """
         prompt = f"""
-        Generate a strict and angry message for WhatsApp for a team member:
+        Generate a personalized outreach message for WhatsApp for:
         Name: {customer.name}
-        
-        Core Message: "Please come on time to the team meetings."
+        Interaction History: {customer.interaction_history}
         
         Rules for the message:
-        - Write in natural HINGLISH — a casual, realistic mix of Hindi and English the way educated Indian professionals actually speak and text.
-        - Use Hindi (in Roman script, NOT Devanagari) for emotions, everyday words, and connecting phrases. Example: "yaar", "bhai", "ek baar", "kab se", "seedha baat".
-        - Use English naturally for technical or formal terms. Example: "meeting", "time", "professional", "seriously", "expectations".
-        - The tone must be ANGRY and STRICT — like Sanjeev Jain Sir who is genuinely frustrated and upset about lateness.
-        - Under 40 words. Keep it punchy and direct.
-        - Do NOT start with "Hello" or any greeting. Go straight to the point.
-        - Do NOT use any signature, placeholder, or closing like [Your Name].
-        - Sound like a real WhatsApp voice note from a senior — NOT like a formal letter or an AI chatbot.
+        - Write in CODE-MIXED script: Hindi words MUST be written in Devanagari (e.g., यार, देखो, बात, तुमने, करते हैं, कब, बताओ), and English words MUST stay in English Latin script (e.g., demo, AI, connect, solution, support, request, follow up).
+        - Do NOT write Hindi words in Roman/English letters (so "yaar" is WRONG, "यार" is CORRECT).
+        - Do NOT write English words in Devanagari (so "डेमो" is WRONG, "demo" is CORRECT).
+        - The tone should be warm, confident, and personal — exactly like Sanjeev Jain Sir personally reaching out to a prospect.
+        - The message MUST reference the Interaction History above — base it on what the customer actually asked or did.
+        - Under 50 words. Keep it conversational and punchy.
+        - Do NOT start with a generic greeting like "नमस्ते" or "Hello". Get to the point naturally.
+        - Do NOT use any signature, placeholder, or closing like [Your Name] or [Company Name].
+        - Sound like a real WhatsApp voice note from a trusted senior professional.
+        
+        Example format: "यार, तुमने AI customer support के बारे में बात की थी — demo भी request किया था। तो connect करते हैं और मैं exactly show करूँगा कैसे काम करता है। बताओ कब free हो?"
         """
         
         try:
@@ -93,10 +95,10 @@ class AIService:
         
         Generate a friendly, natural, and concise reply.
         Rules:
-        - Write in natural HINGLISH — a mix of casual Hindi (Roman script, NOT Devanagari) and English, exactly how an educated Indian professional speaks in real life.
-        - Use Hindi for warmth and emotion: words like "bilkul", "haan", "dekho", "acha", "theek hai", "zaroor".
-        - Use English naturally for context and clarity: "absolutely", "sure", "let me know", "connect", "team".
-        - It will be spoken by Sanjeev Jain Sir via Text-to-Speech — write it like how HE would casually speak, warm but authoritative.
+        - Write in CODE-MIXED script: Hindi words MUST be written in Devanagari (e.g., बिल्कुल, हाँ, देखो, अच्छा, ठीक है, ज़रूर), and English words MUST stay in English Latin script (e.g., absolutely, sure, connect, team, let me know).
+        - Do NOT write Hindi words in Roman letters (so "bilkul" is WRONG, "बिल्कुल" is CORRECT).
+        - Do NOT write English words in Devanagari.
+        - It will be spoken by Sanjeev Jain Sir via Text-to-Speech — write it exactly how HE would casually speak, warm but authoritative.
         - Keep it brief (under 30 words). No greeting needed — go straight to the reply.
         - Sound like a real voice note, NOT a formal message or AI response.
         """

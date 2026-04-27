@@ -54,14 +54,14 @@ class VoiceService:
         }
         
         data = {
-            "model": "speech-01-turbo",
+            "model": "speech-01",
             "text": text,
             "stream": False,
             "voice_setting": {
                 "voice_id": self.mm_voice_id,
-                "speed": 0.75,  # Slowed down for clearer delivery (range: 0.5 - 2.0)
+                "speed": 1.0,
                 "vol": 1.0,
-                "pitch": 0
+                "pitch": 0.9
             },
             "audio_setting": {
                 "sample_rate": 32000,
@@ -128,7 +128,7 @@ class VoiceService:
             "voice_settings": {
                 "stability": 0.5,
                 "similarity_boost": 0.5,
-                "speed": 0.75  # Slowed down for clearer delivery (range: 0.7 - 1.2)
+                "speed": 0.85  # Slightly slower than default for clearer delivery (range: 0.7 - 1.2)
             }
         }
         
