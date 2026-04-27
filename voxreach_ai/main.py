@@ -134,11 +134,7 @@ async def process_outreach_ui(
                         audio_local_path = os.path.join(os.getcwd(), "audio", audio_filename)
                         logger.info(f"Audio URL generated: {result.audio_url}")
                         
-                        # Step 1: Silently open the 24hr WhatsApp session via template (required by Meta policy).
-                        logger.info(f"Opening WhatsApp session via template for {result.phone} (silent session opener).")
-                        notification_service.send_whatsapp_message(result.phone, "", is_template=True)
-                        
-                        # Step 2: Send ONLY the audio
+                        # Send ONLY the audio
                         logger.info(f"Sending audio-only message to {result.phone}.")
                         success, error = notification_service.send_audio_message(result.phone, result.audio_url, audio_path=audio_local_path)
                     else:
