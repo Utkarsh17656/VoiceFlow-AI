@@ -18,6 +18,7 @@ class VoiceService:
         
         # Minimax Settings
         self.mm_api_key = settings.MINIMAX_API_KEY
+        self.mm_group_id = settings.MINIMAX_GROUP_ID
         self.mm_voice_id = settings.MINIMAX_VOICE_ID or "moss_audio_7b99f288-a349-11f0-ac24-56b1c4839062"
         self.mm_base_url = settings.MINIMAX_BASE_URL
         
@@ -36,7 +37,11 @@ class VoiceService:
         Returns the path to the generated audio file or None if it fails.
         """
         # 1. Determine key to hash (prefer cache_key over text)
-        string_to_hash = cache_key if cache_key else text
+        base_key = cache_key if cache_key else text
+        
+        # Add provider and voice_id to cache key so changing voices busts the cache
+        current_voice_id = self.mm_voice_id if self.provider == "minimax" else self.el_voice_id
+        string_to_hash = f"{self.provider}_{current_voice_id}_{base_key}"
         
         # 2. Normalize to improve matching
         normalized_str = string_to_hash.strip().lower()
@@ -71,14 +76,14 @@ class VoiceService:
         }
         
         data = {
-            "model": "speech-01",
+            "model": "speech-01-hd",
             "text": text,
             "stream": False,
             "voice_setting": {
                 "voice_id": self.mm_voice_id,
                 "speed": 1.0,
-                "vol": 1.0,
-                "pitch": 0.9
+                "vol": 3,
+                "pitch": 0
             },
             "audio_setting": {
                 "sample_rate": 32000,
@@ -90,8 +95,10 @@ class VoiceService:
         }
         
         try:
-            logger.debug(f"Calling Minimax API at {self.mm_base_url}")
-            response = requests.post(self.mm_base_url, json=data, headers=headers, timeout=30)
+            # Minimax v2 requires GroupId as a query parameter
+            url = f"{self.mm_base_url}?GroupId={self.mm_group_id}"
+            logger.debug(f"Calling Minimax API at {url}")
+            response = requests.post(url, json=data, headers=headers, timeout=30)
             
             if response.status_code == 200:
                 result = response.json()
@@ -140,9 +147,11 @@ class VoiceService:
             "text": text,
             "model_id": "eleven_multilingual_v2",
             "voice_settings": {
-                "stability": 0.5,
-                "similarity_boost": 0.5,
-                "speed": 0.85  # Slightly slower than default for clearer delivery (range: 0.7 - 1.2)
+                "stability": 0.75,
+                "similarity_boost": 0.85,
+                "style": 0.5,
+                "use_speaker_boost": True,
+                "speed": 0.7
             }
         }
         

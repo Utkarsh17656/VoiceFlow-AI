@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     
     # Minimax Configuration
     MINIMAX_API_KEY: str = ""
+    MINIMAX_GROUP_ID: str = ""
     MINIMAX_VOICE_ID: str = ""
     MINIMAX_BASE_URL: str = "https://api.minimax.io/v1/t2a_v2"
 

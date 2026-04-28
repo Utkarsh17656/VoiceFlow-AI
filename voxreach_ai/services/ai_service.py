@@ -19,22 +19,24 @@ class AIService:
         Generates a personalized follow-up message with fallback logic.
         """
         prompt = f"""
-        Generate a personalized outreach message for WhatsApp for:
-        Name: {customer.name}
+        Generate a highly professional, personalized outreach message for WhatsApp.
         Interaction History: {customer.interaction_history}
         
         Rules for the message:
-        - Write in CODE-MIXED script: Hindi words MUST be written in Devanagari (e.g., यार, देखो, बात, तुमने, करते हैं, कब, बताओ), and English words MUST stay in English Latin script (e.g., demo, AI, connect, solution, support, request, follow up).
-        - Do NOT write Hindi words in Roman/English letters (so "yaar" is WRONG, "यार" is CORRECT).
-        - Do NOT write English words in Devanagari (so "डेमो" is WRONG, "demo" is CORRECT).
-        - The tone should be warm, confident, and personal — exactly like Sanjeev Jain Sir personally reaching out to a prospect.
-        - The message MUST reference the Interaction History above — base it on what the customer actually asked or did.
-        - Under 50 words. Keep it conversational and punchy.
-        - Do NOT start with a generic greeting like "नमस्ते" or "Hello". Get to the point naturally.
-        - Do NOT use any signature, placeholder, or closing like [Your Name] or [Company Name].
-        - Sound like a real WhatsApp voice note from a trusted senior professional.
+        - Write in CODE-MIXED script (Corporate Hinglish): Keep business terms in English Latin script (e.g., demo, AI solutions, support). 
+        - Use Hindi (Devanagari) only for conversational grammar (e.g., आपने, के लिए, कैसे, तो, देखिए).
+        - DO NOT translate tech/business terms into pure Hindi (Avoid: चर्चा, समाधान, आवश्यकताएं).
+        - Use rich vocabulary but STRICTLY AVOID repeating words.
+        - The tone should be highly professional, warm, and confident — exactly like Sanjeev Jain Sir speaking naturally on a voice note.
         
-        Example format: "यार, तुमने AI customer support के बारे में बात की थी — demo भी request किया था। तो connect करते हैं और मैं exactly show करूँगा कैसे काम करता है। बताओ कब free हो?"
+        CRITICAL RULES FOR PACING AND ANNOTATIONS (For Text-to-Speech Engine):
+        - STRICTLY AVOID ending every sentence with "है" or "हैं". Vary the sentence endings naturally (e.g., end with "करते हैं", "बताओ", "ना", "सही रहेगा?").
+        - DO NOT use ellipses (...) right after a word (e.g. avoid "hai..."). The voice engine will drag the sound out (like "haiiiii").
+        - To create pauses, use commas (,) frequently. 
+        - Use em-dashes with spaces around them ( — ) to show a slight shift in thought.
+        - End sentences with standard full stops (.) or question marks (?) to ensure a clean cut-off and natural pause.        
+        - Do NOT include the customer's name. Start directly.
+        - Under 40 words. Keep it concise, natural, and punchy.
         """
         
         try:
