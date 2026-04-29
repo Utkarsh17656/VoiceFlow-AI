@@ -57,7 +57,25 @@ class AIService:
                 logger.info(f"Generated message for {customer.name} via {self.provider}")
                 return message
 
-            # PRO Structure: Using requests for maximum control over headers (OpenRouter compliance)
+            if self.provider.lower() == "gemini":
+                # Native Google Gemini API Support
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+                payload = {
+                    "contents": [{
+                        "parts": [{"text": prompt}]
+                    }]
+                }
+                response = requests.post(url, json=payload, timeout=15)
+                if response.status_code == 200:
+                    data = response.json()
+                    message = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    logger.info(f"Generated message for {customer.name} via Native Gemini")
+                    return message
+                else:
+                    logger.error(f"Gemini API Error: {response.status_code} - {response.text}")
+                    return self._generate_fallback_message(customer)
+
+            # PRO Structure: Using requests for maximum control over headers (OpenRouter/OpenAI compliance)
             response = requests.post(
                 f"{self.base_url}/chat/completions",
                 headers={
@@ -122,6 +140,24 @@ class AIService:
                 message = response.strip()
                 logger.info(f"Generated voice reply via g4f")
                 return message
+
+            if self.provider.lower() == "gemini":
+                # Native Google Gemini API Support for replies
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
+                payload = {
+                    "contents": [{
+                        "parts": [{"text": prompt}]
+                    }]
+                }
+                response = requests.post(url, json=payload, timeout=15)
+                if response.status_code == 200:
+                    data = response.json()
+                    message = data["candidates"][0]["content"]["parts"][0]["text"].strip()
+                    logger.info(f"Generated voice reply via Native Gemini")
+                    return message
+                else:
+                    logger.error(f"Gemini API Error on reply: {response.status_code} - {response.text}")
+                    return "Thanks for your message! I'll get back to you shortly."
 
             # OpenRouter / Standard OpenAI payload
             response = requests.post(
