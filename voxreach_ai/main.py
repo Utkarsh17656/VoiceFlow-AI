@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Request, File, UploadFile, Depends, Form
-from fastapi.responses import HTMLResponse
+from fastapi.responses import HTMLResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 from fastapi.middleware.cors import CORSMiddleware
@@ -45,7 +45,7 @@ def create_app() -> FastAPI:
 
 app = create_app()
 
-static_dir = os.path.join(os.path.dirname(__file__), "static")
+static_dir = os.path.join(os.getcwd(), "voxreach_ai", "static")
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
 app.mount("/static", StaticFiles(directory=static_dir), name="static")
@@ -55,12 +55,22 @@ if not os.path.exists(audio_dir):
     os.makedirs(audio_dir)
 app.mount("/audio", StaticFiles(directory=audio_dir), name="audio")
 
-templates_dir = os.path.join(os.path.dirname(__file__), "templates")
-templates = Jinja2Templates(directory=templates_dir)
+templates_dir = os.path.join(os.getcwd(), "voxreach_ai", "templates")
+try:
+    templates = Jinja2Templates(directory=templates_dir)
+except Exception as e:
+    logger.error(f"Failed to initialize templates: {e}")
+    templates = None
 
-@app.get("/", response_class=HTMLResponse)
+@app.get("/")
 async def home(request: Request):
-    return templates.TemplateResponse("index.html", {"request": request})
+    try:
+        if templates:
+            return templates.TemplateResponse("index.html", {"request": request})
+        return JSONResponse(content={"status": "VoxReach AI running", "error": "Templates missing"})
+    except Exception as e:
+        logger.error(f"Error rendering home template: {e}")
+        return JSONResponse(content={"status": "VoxReach AI running", "error": str(e)})
 
 @app.post("/", response_class=HTMLResponse)
 async def process_outreach_ui(
