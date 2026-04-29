@@ -39,6 +39,15 @@ class VoiceService:
         # 1. Determine key to hash (prefer cache_key over text)
         base_key = cache_key if cache_key else text
         
+        # Serialize dicts deterministically to avoid unhashable type error and ensure cache consistency
+        if isinstance(base_key, dict):
+            try:
+                base_key = json.dumps(base_key, sort_keys=True)
+            except Exception:
+                base_key = str(base_key)
+        elif not isinstance(base_key, str):
+            base_key = str(base_key)
+        
         # Add provider and voice_id to cache key so changing voices busts the cache
         current_voice_id = self.mm_voice_id if self.provider == "minimax" else self.el_voice_id
         string_to_hash = f"{self.provider}_{current_voice_id}_{base_key}"
