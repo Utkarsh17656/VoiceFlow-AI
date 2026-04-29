@@ -66,7 +66,7 @@ except Exception as e:
 async def home(request: Request):
     try:
         if templates:
-            return templates.TemplateResponse("index.html", {"request": request})
+            return templates.TemplateResponse(request=request, name="index.html", context={"request": request})
         return JSONResponse(content={"status": "VoxReach AI running", "error": "Templates missing"})
     except Exception as e:
         logger.error(f"Error rendering home template: {e}")
@@ -89,8 +89,9 @@ async def process_outreach_ui(
 
     if not has_file and not has_sheet:
         return templates.TemplateResponse(
-            "index.html",
-            {"request": request, "error_message": "Please upload a file (.csv / .xlsx) or provide a Google Sheets URL."}
+            request=request,
+            name="index.html",
+            context={"request": request, "error_message": "Please upload a file (.csv / .xlsx) or provide a Google Sheets URL."}
         )
 
     # --- Validate file extension when a file is uploaded ---
@@ -98,8 +99,9 @@ async def process_outreach_ui(
         lower_name = file.filename.lower()
         if not (lower_name.endswith(".csv") or lower_name.endswith(".xlsx") or lower_name.endswith(".xls")):
             return templates.TemplateResponse(
-                "index.html",
-                {"request": request, "error_message": "Invalid file format. Please upload a .csv or .xlsx file."}
+                request=request,
+                name="index.html",
+                context={"request": request, "error_message": "Invalid file format. Please upload a .csv or .xlsx file."}
             )
 
     try:
@@ -115,8 +117,9 @@ async def process_outreach_ui(
 
         if not customers:
             return templates.TemplateResponse(
-                "index.html",
-                {"request": request, "error_message": "No valid customer records found. Check that phone numbers are present."}
+                request=request,
+                name="index.html",
+                context={"request": request, "error_message": "No valid customer records found. Check that phone numbers are present."}
             )
 
         processed_results = ai_service.process_batch(customers)
@@ -163,8 +166,9 @@ async def process_outreach_ui(
         failed_count = total_processed - sent_count
 
         return templates.TemplateResponse(
-            "index.html", 
-            {
+            request=request,
+            name="index.html", 
+            context={
                 "request": request, 
                 "results": processed_results,
                 "total_processed": total_processed,
@@ -177,14 +181,16 @@ async def process_outreach_ui(
     except ValueError as e:
         logger.error(f"Value error: {str(e)}")
         return templates.TemplateResponse(
-            "index.html", 
-            {"request": request, "error_message": str(e)}
+            request=request,
+            name="index.html", 
+            context={"request": request, "error_message": str(e)}
         )
     except Exception as e:
         logger.error(f"Internal error: {str(e)}")
         return templates.TemplateResponse(
-            "index.html", 
-            {"request": request, "error_message": "An internal error occurred during processing."}
+            request=request,
+            name="index.html", 
+            context={"request": request, "error_message": "An internal error occurred during processing."}
         )
 
 if __name__ == "__main__":
