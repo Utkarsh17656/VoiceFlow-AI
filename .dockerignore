@@ -1,0 +1,15 @@
+.env
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+audio/
+uploads/
+.git/
+.gitignore
+.gemini/
+scratch/
