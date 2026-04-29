@@ -160,8 +160,8 @@ class AIService:
         Fault-tolerant fallback: Returns a high-quality standard message if AI fails.
         """
         return (
-            f"Hello {customer.name}, I noticed your interest in '{customer.interaction_history}'. "
-            f"I'd love to connect and discuss how we can help. Let's chat!"
+            f"Hello {customer.name}, मैंने देखा कि आप '{customer.interaction_history}' के बारे में enquire कर रहे थे। "
+            f"मैं इसके बारे में आपसे detail में discuss करना चाहता हूँ। चलिए connect करते हैं!"
         )
 
     def process_batch(self, customers: List[Customer]) -> List[ProcessedCustomer]:
