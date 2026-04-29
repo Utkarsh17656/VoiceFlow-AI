@@ -14,7 +14,7 @@ class Settings(BaseSettings):
     UPLOAD_DIR: str = "uploads"
     
     # Notifications Configuration
-    NOTIFICATION_PROVIDER: str = "cloud" # options: "twilio", "pywhatkit", "cloud"
+    NOTIFICATION_PROVIDER: str = "cloud" # options: "twilio", "cloud"
     TWILIO_ACCOUNT_SID: str = ""
     TWILIO_AUTH_TOKEN: str = ""
     TWILIO_WHATSAPP_NUMBER: str = ""

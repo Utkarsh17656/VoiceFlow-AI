@@ -7,10 +7,6 @@ from voxreach_ai.utils.logger import logger
 import requests
 import os
 
-try:
-    import pywhatkit
-except ImportError:
-    pywhatkit = None
 
 settings = get_settings()
 
@@ -36,11 +32,6 @@ class NotificationService:
                 logger.info("WhatsApp Cloud API provider initialized.")
             else:
                 logger.warning("WhatsApp Cloud API credentials missing.")
-        elif self.provider == "pywhatkit":
-            if pywhatkit:
-                logger.info("PyWhatKit provider initialized for browser automation.")
-            else:
-                logger.error("pywhatkit library not found. Please run 'pip install pywhatkit'.")
 
     def send_whatsapp_message(self, phone: str, message: str, is_template: bool = False) -> Tuple[bool, Optional[str]]:
         """
@@ -49,10 +40,6 @@ class NotificationService:
         """
         if self.provider == "cloud":
             return self._send_via_cloud_api(phone, message, is_template=is_template)
-        elif self.provider == "pywhatkit":
-            if is_template:
-                return self._send_via_pywhatkit(phone, "test123")
-            return self._send_via_pywhatkit(phone, message)
         
         return self._send_via_twilio(phone, message)
 
@@ -134,11 +121,7 @@ class NotificationService:
         If audio_path is provided, it uploads the media natively to circumvent localhost restrictions.
         For PyWhatKit or Twilio, it sends the audio URL as a text message since native audio upload requires specific media endpoints.
         """
-        if self.provider == "pywhatkit":
-            logger.info("Sending audio URL via pywhatkit as text message.")
-            return self._send_via_pywhatkit(phone, f"🎤 Please listen to your personalized message here: {audio_url}")
-            
-        elif self.provider == "twilio":
+        if self.provider == "twilio":
             logger.info("Sending audio URL via Twilio as text message.")
             # Note: Twilio can support media_url for WhatsApp, but text fallback is safer if media fails.
             return self._send_via_twilio(phone, f"🎤 Please listen to your personalized message here: {audio_url}")
@@ -206,33 +189,5 @@ class NotificationService:
                 
         return False, f"Unsupported provider for audio messages: {self.provider}"
 
-    def _send_via_pywhatkit(self, phone: str, message: str) -> Tuple[bool, Optional[str]]:
-        if not pywhatkit:
-            return False, "pywhatkit library not installed"
-    
-        try:
-            # Normalize phone number (ensure it starts with +)
-            target_phone = phone if phone.startswith("+") else f"+{phone.strip()}"
-            
-            logger.info(f"Preparing to send WhatsApp message to {target_phone} via pywhatkit (Edge/Browser)...")
-            
-            # sendwhatmsg_instantly(phone_no, message, wait_time=15, tab_close=True, close_time=10)
-            # - wait_time: seconds to wait before typing the message (allows browser to load)
-            # - tab_close: close the tab after sending
-            # - close_time: seconds to wait before closing the tab
-            pywhatkit.sendwhatmsg_instantly(
-                phone_no=target_phone,
-                message=message,
-                wait_time=15,
-                tab_close=True,
-                close_time=10
-            )
-            
-            logger.info(f"Success: Automation completed for {target_phone}. Tab will close in 10s.")
-            return True, None
-            
-        except Exception as e:
-            logger.error(f"PyWhatKit error for {phone}: {str(e)}")
-            return False, str(e)
 
 notification_service = NotificationService()
