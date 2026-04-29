@@ -21,4 +21,4 @@ EXPOSE 8000
 
 # Start the application using uvicorn. 
 # Render automatically injects the PORT environment variable.
-CMD uvicorn voxreach_ai.main:app --host 0.0.0.0 --port ${PORT:-8000}
+CMD ["sh", "-c", "uvicorn voxreach_ai.main:app --host 0.0.0.0 --port $PORT"]
