@@ -140,7 +140,7 @@ async def process_outreach_ui(
                         # Use settings.BASE_URL to ensure public URLs for Cloud API (e.g., ngrok)
                         base_url = settings.BASE_URL.rstrip('/')
                         # Fallback to request if settings.BASE_URL is default localhost but request is public
-                        if "localhost" in base_url and "127.0.0.1" in base_url and "ngrok" in str(request.base_url):
+                        if "localhost" in base_url or "127.0.0.1" in base_url or "ngrok" in str(request.base_url):
                             base_url = str(request.base_url).rstrip('/')
                             
                         result.audio_url = f"{base_url}/audio/{audio_filename}"

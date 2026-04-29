@@ -86,7 +86,7 @@ async def process_outreach(
                     if audio_filename:
                         # Use settings.BASE_URL to ensure public URLs for Cloud API
                         base_url = settings.BASE_URL.rstrip('/')
-                        if "localhost" in base_url and "127.0.0.1" in base_url and "ngrok" in str(request.base_url):
+                        if "localhost" in base_url or "127.0.0.1" in base_url or "ngrok" in str(request.base_url):
                             base_url = str(request.base_url).rstrip('/')
                             
                         result.audio_url = f"{base_url}/audio/{audio_filename}"
