@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>VoxReach AI – Smart Outreach Dashboard</title>
     <meta name="description" content="VoxReach AI – Upload CSV or Excel to generate personalized AI-powered WhatsApp outreach messages.">
-    <link rel="stylesheet" href="/static/styles.css?v=3">
+    <link rel="stylesheet" href="/static/styles.css?v=4">
 </head>
 <body>
     <header class="navbar">
@@ -13,6 +13,9 @@
             <h1>VoxReach AI</h1>
             <p>Smart Outreach Dashboard</p>
         </div>
+        <button id="themeToggle" class="theme-toggle" aria-label="Toggle Dark Mode" title="Toggle Dark/Light Mode">
+            🌙
+        </button>
     </header>
 
     <main class="container">
@@ -26,7 +29,7 @@
 
         <!-- Analytics Cards -->
         {% if results %}
-        <div class="analytics-grid">
+        <div class="analytics-grid animate-fade-in">
             <div class="card stat-card stat-total">
                 <div class="stat-icon">👥</div>
                 <div class="stat-details">
@@ -52,7 +55,7 @@
         {% endif %}
 
         <!-- Upload Section -->
-        <div class="card upload-card">
+        <div class="card upload-card animate-fade-in delay-1">
             <div class="upload-header">
                 <h2>Upload Customer Data</h2>
                 <p>Upload a <strong>.csv</strong> or <strong>.xlsx</strong> file — or paste a <strong>Google Sheets</strong> link — containing <code>name</code>, <code>phone</code>, and <code>history</code> columns.</p>
@@ -107,7 +110,7 @@
 
         <!-- Results Section -->
         {% if results %}
-        <div class="card results-card" id="resultsSection">
+        <div class="card results-card animate-fade-in delay-2" id="resultsSection">
             <div class="results-header">
                 <h2>Outreach Results</h2>
                 <div class="results-actions">
@@ -166,6 +169,6 @@
         {% endif %}
     </main>
 
-    <script src="/static/script.js?v=3"></script>
+    <script src="/static/script.js?v=4"></script>
 </body>
 </html>

@@ -151,7 +151,7 @@ class VoiceService:
                 "similarity_boost": 0.85,
                 "style": 0.5,
                 "use_speaker_boost": True,
-                "speed": 0.7
+                "speed": 0.75
             }
         }
         

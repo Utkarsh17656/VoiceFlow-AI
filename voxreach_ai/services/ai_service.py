@@ -35,8 +35,12 @@ class AIService:
         - To create pauses, use commas (,) frequently. 
         - Use em-dashes with spaces around them ( — ) to show a slight shift in thought.
         - End sentences with standard full stops (.) or question marks (?) to ensure a clean cut-off and natural pause.        
-        - Do NOT include the customer's name. Start directly.
-        - Under 40 words. Keep it concise, natural, and punchy.
+        
+        MESSAGE STRUCTURE (CRITICAL FOR RETENTION):
+        - 1. THE HOOK (First 3-4 Seconds): Start with a very catchy, direct question or bold statement to grab immediate attention. (e.g., "देखिए — अगर आप अपने बिज़नेस को scale करना चाहते हैं, तो यह मैसेज आपके लिए है।")
+        - 2. THE CORE VALUE (Next 10 Seconds): Explain exactly how you can help them based on their Interaction History.
+        - Do NOT include the customer's name. Start directly with the hook.
+        - Under 40 words. Keep it incredibly concise, high-energy, and punchy.
         """
         
         try:

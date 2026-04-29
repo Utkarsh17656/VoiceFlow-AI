@@ -1,4 +1,30 @@
+// ── Theme Management ───────────────────────────────────────────────────────
+const savedTheme = localStorage.getItem('voxreach-theme') || 'light';
+if (savedTheme === 'dark') {
+    document.documentElement.setAttribute('data-theme', 'dark');
+}
+
 document.addEventListener("DOMContentLoaded", () => {
+    // Setup Theme Toggle
+    const themeToggle = document.getElementById('themeToggle');
+    if (themeToggle) {
+        themeToggle.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+        
+        themeToggle.addEventListener('click', () => {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            if (newTheme === 'dark') {
+                document.documentElement.setAttribute('data-theme', 'dark');
+                themeToggle.textContent = '☀️';
+                localStorage.setItem('voxreach-theme', 'dark');
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                themeToggle.textContent = '🌙';
+                localStorage.setItem('voxreach-theme', 'light');
+            }
+        });
+    }
 
     const fileDropArea    = document.getElementById("fileDropArea");
     const fileInput       = document.getElementById("fileInput");
