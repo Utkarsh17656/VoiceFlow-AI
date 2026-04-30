@@ -69,20 +69,21 @@ class AIService:
         - Hindi words MUST be written in Devanagari script (e.g., "देखिए, अगर आप").
         - Business/Tech terms MUST stay in English Latin script (e.g., "processes", "AI solutions", "boost").
         - DO NOT translate English business terms into pure Hindi (Avoid: "चर्चा", "समाधान").
+        - DO NOT use any exclamation marks (!). They make the voice engine sound unnatural. Use double dashes (--) or periods (.) instead.
         
         MESSAGE STRUCTURE, TONE, AND VARIATION:
-        - Hook: Start with a natural, varied greeting (e.g., "नमस्कार!", "Hello!", "Hi!") followed immediately by a catchy question based on their Interaction History. Do NOT always use the same exact opening.
+        - Hook: Start with a natural, varied greeting (e.g., "नमस्कार --", "Hello --", "Hi --") followed immediately by a catchy question based on their Interaction History. Do NOT always use the same exact opening.
         - Core Value: Explain how your AI solutions can help them.
         - Call to Action: End by directly asking for their availability so they reply instantly (e.g., "आज किस time बात करना सही रहेगा?", "आप free होकर कोई time बता दीजिये?", "What time works best for you?").
         - Do NOT include structural labels like "[Hook]" or "[Core Value]".
         - The message MUST be UNDER 35 WORDS total.
         
         PACING AND AUDIO RULES (FOR REALISTIC VOICE):
-        - Add frequent commas (,) and em-dashes ( — ) to force the voice engine to take natural pauses and speak slowly. This prevents the voice from sounding rushed.
+        - Add frequent commas (,) and double dashes (--) to force the voice engine to take natural pauses and speak slowly. This prevents the voice from sounding rushed.
         - STRICTLY AVOID ending every sentence with "है" or "हैं". Vary the endings so it sounds conversational and not like a robotic broadcast.
         
         CORRECT EXAMPLE OF EXPECTED STYLE (Use as inspiration, but vary the exact words):
-        "नमस्कार! — क्या आप अपने कस्टमर सपोर्ट processes को revolutionize करना चाहते हैं, वो भी AI की power से? मैं आपके लिए बिलकुल सही AI solutions लेकर आया हूँ, जो आपके support operations को dramatically boost करेंगे। — आज किस time बात कर सकते हैं?"
+        "नमस्कार -- क्या आप अपने कस्टमर सपोर्ट processes को revolutionize करना चाहते हैं, वो भी AI की power से? मैं आपके लिए बिलकुल सही AI solutions लेकर आया हूँ, जो आपके support operations को dramatically boost करेंगे -- आज किस time बात कर सकते हैं?"
         
         Now, generate a unique, highly natural message for the interaction history above. Make it sound like a spontaneous, thoughtful voice note from Sanjeev Jain Sir, taking natural pauses, and NOT like a static, repetitive template.
         """
