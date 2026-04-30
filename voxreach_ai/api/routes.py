@@ -82,7 +82,7 @@ async def process_outreach(
                         is_template=True
                     )
                 else:
-                    audio_filename = voice_service.generate_audio(result.generated_message, cache_key=result.interaction_history)
+                    audio_filename = voice_service.generate_audio(result.generated_message)
                     if audio_filename:
                         # Use settings.BASE_URL to ensure public URLs for Cloud API
                         base_url = settings.BASE_URL.rstrip('/')

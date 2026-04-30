@@ -14,95 +14,86 @@ class AIService:
         self.model = settings.AI_MODEL
         self.provider = settings.AI_PROVIDER
 
+    def _g4f_call(self, prompt: str, system_message: str) -> str:
+        import g4f
+        response = g4f.ChatCompletion.create(
+            model=g4f.models.default,
+            messages=[
+                {"role": "system", "content": system_message},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return response.strip()
+
+    def _openrouter_call(self, prompt: str, system_message: str) -> str:
+        response = requests.post(
+            f"{self.base_url}/chat/completions",
+            headers={
+                "Authorization": f"Bearer {self.api_key}",
+                "Content-Type": "application/json",
+                "HTTP-Referer": "http://localhost:8000",
+                "X-Title": "VoxReach AI"
+            },
+            json={
+                "model": self.model,
+                "messages": [
+                    {"role": "system", "content": system_message},
+                    {"role": "user", "content": prompt}
+                ]
+            },
+            timeout=15
+        )
+        
+        if response.status_code != 200:
+            raise Exception(f"OpenRouter API Error: {response.status_code} - {response.text}")
+
+        data = response.json()
+        return data["choices"][0]["message"]["content"].strip()
+
+    def _execute_ai_call(self, prompt: str, system_message: str) -> str:
+        if self.provider.lower() == "g4f":
+            return self._g4f_call(prompt, system_message)
+        else:
+            return self._openrouter_call(prompt, system_message)
+
     def generate_outreach_message(self, customer: Customer) -> str:
         """
         Generates a personalized follow-up message with fallback logic.
         """
         prompt = f"""
-        Generate a highly professional, personalized outreach message for WhatsApp.
+        Generate a highly professional, personalized outreach voice note transcript for WhatsApp.
         Interaction History: {customer.interaction_history}
         
-        Rules for the message:
-        - Write in CODE-MIXED script (Corporate Hinglish): Keep business terms in English Latin script (e.g., demo, AI solutions, support). 
-        - Use Hindi (Devanagari) only for conversational grammar (e.g., आपने, के लिए, कैसे, तो, देखिए).
-        - DO NOT translate tech/business terms into pure Hindi (Avoid: चर्चा, समाधान, आवश्यकताएं).
-        - Use rich vocabulary but STRICTLY AVOID repeating words.
-        - The tone should be highly professional, warm, and confident — exactly like Sanjeev Jain Sir speaking naturally on a voice note.
+        CRITICAL SCRIPT RULES (STRICTLY ENFORCED):
+        - ABSOLUTELY NO ROMANIZED HINDI! Do NOT write "dekhiye, agar aap".
+        - Hindi words MUST be written in Devanagari script (e.g., "देखिए, अगर आप").
+        - Business/Tech terms MUST stay in English Latin script (e.g., "processes", "AI solutions", "boost").
+        - DO NOT translate English business terms into pure Hindi (Avoid: "चर्चा", "समाधान").
         
-        CRITICAL RULES FOR PACING AND ANNOTATIONS (For Text-to-Speech Engine):
-        - STRICTLY AVOID ending every sentence with "है" or "हैं". Vary the sentence endings naturally (e.g., end with "करते हैं", "बताओ", "ना", "सही रहेगा?").
-        - DO NOT use ellipses (...) right after a word (e.g. avoid "hai..."). The voice engine will drag the sound out (like "haiiiii").
-        - To create pauses, use commas (,) frequently. 
-        - Use em-dashes with spaces around them ( — ) to show a slight shift in thought.
-        - End sentences with standard full stops (.) or question marks (?) to ensure a clean cut-off and natural pause.        
+        MESSAGE STRUCTURE, TONE, AND VARIATION:
+        - Hook: Start with a natural, varied greeting (e.g., "नमस्कार!", "Hello!", "Hi!") followed immediately by a catchy question based on their Interaction History. Do NOT always use the same exact opening.
+        - Core Value: Explain how your AI solutions can help them.
+        - Call to Action: End by directly asking for their availability so they reply instantly (e.g., "आज किस time बात करना सही रहेगा?", "आप free होकर कोई time बता दीजिये?", "What time works best for you?").
+        - Do NOT include structural labels like "[Hook]" or "[Core Value]".
+        - The message MUST be UNDER 35 WORDS total.
         
-        MESSAGE STRUCTURE (CRITICAL FOR RETENTION):
-        - 1. THE HOOK (First 3-4 Seconds): Start with a very catchy, direct question or bold statement to grab immediate attention. (e.g., "देखिए — अगर आप अपने बिज़नेस को scale करना चाहते हैं, तो यह मैसेज आपके लिए है।")
-        - 2. THE CORE VALUE (Next 10 Seconds): Explain exactly how you can help them based on their Interaction History.
-        - Do NOT include the customer's name. Start directly with the hook.
-        - Under 40 words. Keep it incredibly concise, high-energy, and punchy.
+        PACING AND AUDIO RULES (FOR REALISTIC VOICE):
+        - Add frequent commas (,) and em-dashes ( — ) to force the voice engine to take natural pauses and speak slowly. This prevents the voice from sounding rushed.
+        - STRICTLY AVOID ending every sentence with "है" or "हैं". Vary the endings so it sounds conversational and not like a robotic broadcast.
+        
+        CORRECT EXAMPLE OF EXPECTED STYLE (Use as inspiration, but vary the exact words):
+        "नमस्कार! — क्या आप अपने कस्टमर सपोर्ट processes को revolutionize करना चाहते हैं, वो भी AI की power से? मैं आपके लिए बिलकुल सही AI solutions लेकर आया हूँ, जो आपके support operations को dramatically boost करेंगे। — आज किस time बात कर सकते हैं?"
+        
+        Now, generate a unique, highly natural message for the interaction history above. Make it sound like a spontaneous, thoughtful voice note from Sanjeev Jain Sir, taking natural pauses, and NOT like a static, repetitive template.
         """
         
         try:
-            if self.provider.lower() == "g4f":
-                import g4f
-                response = g4f.ChatCompletion.create(
-                    model=g4f.models.gpt_4,
-                    messages=[
-                        {"role": "system", "content": "You are a professional outreach assistant."},
-                        {"role": "user", "content": prompt}
-                    ]
-                )
-                message = response.strip()
-                logger.info(f"Generated message for {customer.name} via {self.provider}")
-                return message
-
-            if self.provider.lower() == "gemini":
-                # Native Google Gemini API Support
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
-                payload = {
-                    "contents": [{
-                        "parts": [{"text": prompt}]
-                    }]
-                }
-                response = requests.post(url, json=payload, timeout=15)
-                if response.status_code == 200:
-                    data = response.json()
-                    message = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                    logger.info(f"Generated message for {customer.name} via Native Gemini")
-                    return message
-                else:
-                    logger.error(f"Gemini API Error: {response.status_code} - {response.text}")
-                    return self._generate_fallback_message(customer)
-
-            # PRO Structure: Using requests for maximum control over headers (OpenRouter/OpenAI compliance)
-            response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "http://localhost:8000",
-                    "X-Title": "VoxReach AI"
-                },
-                json={
-                    "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": "You are a professional outreach assistant."},
-                        {"role": "user", "content": prompt}
-                    ]
-                },
-                timeout=15
+            message = self._execute_ai_call(
+                prompt=prompt, 
+                system_message="You are a professional outreach assistant."
             )
-            
-            if response.status_code != 200:
-                logger.error(f"AI API Error: {response.status_code} - {response.text}")
-                return self._generate_fallback_message(customer)
-
-            data = response.json()
-            message = data["choices"][0]["message"]["content"].strip()
             logger.info(f"Generated message for {customer.name} via {self.provider}")
             return message
-
         except Exception as e:
             logger.error(f"Processing Error for {customer.name}: {str(e)}")
             return self._generate_fallback_message(customer)
@@ -128,65 +119,12 @@ class AIService:
         """
         
         try:
-            if self.provider.lower() == "g4f":
-                import g4f
-                response = g4f.ChatCompletion.create(
-                    model=g4f.models.gpt_4,
-                    messages=[
-                        {"role": "system", "content": "You are a friendly voice assistant for VoxReach."},
-                        {"role": "user", "content": prompt}
-                    ]
-                )
-                message = response.strip()
-                logger.info(f"Generated voice reply via g4f")
-                return message
-
-            if self.provider.lower() == "gemini":
-                # Native Google Gemini API Support for replies
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{self.model}:generateContent?key={self.api_key}"
-                payload = {
-                    "contents": [{
-                        "parts": [{"text": prompt}]
-                    }]
-                }
-                response = requests.post(url, json=payload, timeout=15)
-                if response.status_code == 200:
-                    data = response.json()
-                    message = data["candidates"][0]["content"]["parts"][0]["text"].strip()
-                    logger.info(f"Generated voice reply via Native Gemini")
-                    return message
-                else:
-                    logger.error(f"Gemini API Error on reply: {response.status_code} - {response.text}")
-                    return "Thanks for your message! I'll get back to you shortly."
-
-            # OpenRouter / Standard OpenAI payload
-            response = requests.post(
-                f"{self.base_url}/chat/completions",
-                headers={
-                    "Authorization": f"Bearer {self.api_key}",
-                    "Content-Type": "application/json",
-                    "HTTP-Referer": "http://localhost:8000",
-                    "X-Title": "VoxReach AI"
-                },
-                json={
-                    "model": self.model,
-                    "messages": [
-                        {"role": "system", "content": "You are a friendly voice assistant for VoxReach."},
-                        {"role": "user", "content": prompt}
-                    ]
-                },
-                timeout=15
+            message = self._execute_ai_call(
+                prompt=prompt,
+                system_message="You are a friendly voice assistant for VoxReach."
             )
-            
-            if response.status_code != 200:
-                logger.error(f"AI API Error on reply: {response.status_code} - {response.text}")
-                return "I'm sorry, I'm having a little trouble thinking of what to say right now!"
-
-            data = response.json()
-            message = data["choices"][0]["message"]["content"].strip()
             logger.info(f"Generated voice reply via {self.provider}")
             return message
-
         except Exception as e:
             logger.error(f"Processing Error generating reply: {str(e)}")
             return "Thanks for your message! I'll get back to you shortly."
