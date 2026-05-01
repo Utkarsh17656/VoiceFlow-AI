@@ -10,6 +10,7 @@ from voxreach_ai.api.routes import router as api_router
 from voxreach_ai.utils.config import get_settings
 from voxreach_ai.utils.logger import logger
 from voxreach_ai.api.dependencies import get_ai_service, get_data_processor_service, get_notification_service, get_voice_service
+from voxreach_ai.api.routes import _load_pending_queue, _save_pending_queue
 
 settings = get_settings()
 
@@ -134,6 +135,13 @@ async def process_outreach_ui(
                         result.generated_message, 
                         is_template=True
                     )
+                    if success:
+                        # Save to pending queue so the webhook auto-sends voice on reply
+                        queue = _load_pending_queue()
+                        phone_key = result.phone.replace("+", "").strip()
+                        queue[phone_key] = result.generated_message
+                        _save_pending_queue(queue)
+                        logger.info(f"Queued voice message for {phone_key} pending their reply.")
                 else:
                     audio_filename = voice_service.generate_audio(result.generated_message)
                     if audio_filename:

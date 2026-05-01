@@ -1,4 +1,5 @@
 import os
+import json
 from fastapi import APIRouter, File, UploadFile, Depends, HTTPException, Query, Response, BackgroundTasks, Form
 from typing import List, Dict, Any
 import uuid
@@ -9,6 +10,21 @@ from voxreach_ai.utils.config import get_settings
 
 settings = get_settings()
 from voxreach_ai.utils.logger import logger
+
+PENDING_QUEUE_FILE = os.path.join(os.getcwd(), "pending_voice_queue.json")
+
+def _load_pending_queue() -> dict:
+    if os.path.exists(PENDING_QUEUE_FILE):
+        try:
+            with open(PENDING_QUEUE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {}
+    return {}
+
+def _save_pending_queue(queue: dict):
+    with open(PENDING_QUEUE_FILE, "w", encoding="utf-8") as f:
+        json.dump(queue, f, ensure_ascii=False, indent=4)
 
 router = APIRouter()
 
@@ -81,6 +97,14 @@ async def process_outreach(
                         result.generated_message, 
                         is_template=True
                     )
+                    if success:
+                        # Save to pending queue so the webhook auto-sends voice on reply
+                        queue = _load_pending_queue()
+                        # Normalize phone key: strip + and spaces
+                        phone_key = result.phone.replace("+", "").strip()
+                        queue[phone_key] = result.generated_message
+                        _save_pending_queue(queue)
+                        logger.info(f"Queued voice message for {phone_key} pending their reply.")
                 else:
                     audio_filename = voice_service.generate_audio(result.generated_message)
                     if audio_filename:
@@ -153,25 +177,47 @@ def process_incoming_message(
     notification_service
 ):
     """
-    Background task to process the incoming message, generate AI reply, 
-    synthesize speech, and send it as an audio message.
+    Background task to process the incoming message.
+    Priority 1: If the sender has a pending personalized voice note (queued from template send),
+                send that voice note and remove them from the queue.
+    Priority 2: Otherwise, generate a fresh contextual AI reply and send it as audio.
     """
     logger.info(f"Processing background reply for {sender_phone}: '{message_text}'")
     
-    # 1. Generate text reply
-    reply_text = ai_service.generate_reply_message(message_text, sender_name)
-    logger.info(f"AI generated text reply: {reply_text}")
+    # Normalize phone for queue lookup
+    phone_key = sender_phone.replace("+", "").strip()
     
-    # 2. Generate audio
+    # --- Priority 1: Send queued personalized voice note ---
+    queue = _load_pending_queue()
+    if phone_key in queue:
+        pending_message = queue.pop(phone_key)
+        _save_pending_queue(queue)
+        logger.info(f"Found pending voice note for {phone_key}. Sending personalized audio instead of generic reply.")
+        
+        audio_filename = voice_service.generate_audio(pending_message)
+        if audio_filename:
+            base_url = settings.BASE_URL.rstrip('/')
+            audio_url = f"{base_url}/audio/{audio_filename}"
+            success, error = notification_service.send_audio_message(sender_phone, audio_url)
+            if success:
+                logger.info(f"Successfully delivered queued personalized voice note to {sender_phone}.")
+            else:
+                logger.error(f"Failed to send queued voice note to {sender_phone}: {error}")
+        else:
+            logger.error(f"Audio generation failed for queued message to {sender_phone}.")
+        return
+    
+    # --- Priority 2: Generate fresh contextual AI reply ---
+    reply_text = ai_service.generate_reply_message(message_text, sender_name)
+    logger.info(f"AI generated contextual text reply: {reply_text}")
+    
     audio_filename = voice_service.generate_audio(reply_text)
     
     if audio_filename:
-        # Use settings.BASE_URL to construct the absolute public URL for the audio file
         base_url = settings.BASE_URL.rstrip('/')
         audio_url = f"{base_url}/audio/{audio_filename}"
         
-        # 3. Send back to user via audio payload
-        logger.info(f"Sending audio response via WhatsApp API: {audio_url}")
+        logger.info(f"Sending contextual audio response via WhatsApp API: {audio_url}")
         success, error = notification_service.send_audio_message(sender_phone, audio_url)
         
         if success:
