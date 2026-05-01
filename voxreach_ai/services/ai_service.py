@@ -65,8 +65,10 @@ class AIService:
         Interaction History: {customer.interaction_history}
         
         CRITICAL SCRIPT RULES (STRICTLY ENFORCED):
-        - ABSOLUTELY NO ROMANIZED HINDI! Do NOT write "dekhiye, agar aap".
-        - Hindi words MUST be written in Devanagari script (e.g., "देखिए, अगर आप").
+        - ABSOLUTELY NO ROMANIZED HINDI OR HINGLISH SCRIPT. You are STRICTLY FORBIDDEN from using Roman letters for Hindi words.
+        - Hindi words MUST be written ONLY in Devanagari script (e.g., "देखिए, अगर आप").
+        - FORBIDDEN WORDS (Do NOT use): "mein", "hain", "aapke", "humare", "kya", "kaise", "hai", "nahi", "liye", "sakte". 
+        - YOU MUST USE INSTEAD: "में", "हैं", "आपके", "हमारे", "क्या", "कैसे", "है", "नहीं", "लिए", "सकते".
         - Business/Tech terms MUST stay in English Latin script (e.g., "processes", "AI solutions", "boost").
         - DO NOT translate English business terms into pure Hindi (Avoid: "चर्चा", "समाधान").
         - DO NOT use any exclamation marks (!). They make the voice engine sound unnatural. Use double dashes (--) or periods (.) instead.
@@ -112,6 +114,8 @@ class AIService:
         Generate a friendly, natural, and concise reply.
         Rules:
         - Write in CODE-MIXED script: Hindi words MUST be written in Devanagari (e.g., बिल्कुल, हाँ, देखो, अच्छा, ठीक है, ज़रूर), and English words MUST stay in English Latin script (e.g., absolutely, sure, connect, team, let me know).
+        - ABSOLUTELY NO ROMANIZED HINDI OR HINGLISH SCRIPT. You are STRICTLY FORBIDDEN from using Roman letters for Hindi words.
+        - FORBIDDEN WORDS (Do NOT use): "mein", "hain", "aapke", "humare", "kya", "kaise", "hai", "nahi", "liye", "sakte".
         - Do NOT write Hindi words in Roman letters (so "bilkul" is WRONG, "बिल्कुल" is CORRECT).
         - Do NOT write English words in Devanagari.
         - It will be spoken by Sanjeev Jain Sir via Text-to-Speech — write it exactly how HE would casually speak, warm but authoritative.
