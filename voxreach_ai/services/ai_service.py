@@ -91,6 +91,12 @@ class AIService:
         Generate a highly professional, personalized outreach voice note transcript for WhatsApp.
         Interaction History: {customer.interaction_history}
         
+        LANGUAGE RULE — MANDATORY (This is the most important rule):
+        - The message MUST be written in CODE-MIXED Hindi + English (Hinglish style).
+        - It does NOT matter if the interaction history is in English — you MUST still write the message in Hinglish.
+        - At least 40% of the words MUST be Hindi, written in Devanagari script.
+        - NEVER produce a fully English message. A fully English message is a complete failure.
+
         CRITICAL SCRIPT RULES (STRICTLY ENFORCED):
         - ABSOLUTELY NO ROMANIZED HINDI OR HINGLISH SCRIPT. You are STRICTLY FORBIDDEN from using Roman letters for Hindi words.
         - Hindi words MUST be written ONLY in Devanagari script (e.g., "देखिए, अगर आप").
@@ -114,7 +120,7 @@ class AIService:
         CORRECT EXAMPLE OF EXPECTED STYLE (Use as inspiration, but vary the exact words):
         "नमस्कार ... क्या आप अपने कस्टमर सपोर्ट processes को revolutionize करना चाहते हैं, वो भी AI की power से? मैं आपके लिए बिलकुल सही AI solutions लेकर आया हूँ, जो आपके support operations को dramatically boost करेंगे ... आज किस time बात कर सकते हैं?"
         
-        Now, generate a unique, highly natural message for the interaction history above. Make it sound like a spontaneous, thoughtful voice note from Sanjeev Jain Sir, taking natural pauses, and NOT like a static, repetitive template.
+        Now, generate a unique, highly natural Hinglish message for the interaction history above. Make it sound like a spontaneous, thoughtful voice note from Sanjeev Jain Sir, taking natural pauses, and NOT like a static, repetitive template.
         """
         
         try:
