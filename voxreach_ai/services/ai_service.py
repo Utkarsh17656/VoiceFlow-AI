@@ -1,5 +1,8 @@
 import requests
 import g4f
+import json
+import hashlib
+import os
 from voxreach_ai.models.customer import Customer, ProcessedCustomer
 from voxreach_ai.utils.config import get_settings
 from voxreach_ai.utils.logger import logger
@@ -13,6 +16,25 @@ class AIService:
         self.api_key = settings.AI_API_KEY
         self.model = settings.AI_MODEL
         self.provider = settings.AI_PROVIDER
+        self.cache_file = os.path.join(os.getcwd(), "text_cache.json")
+        self._load_cache()
+
+    def _load_cache(self):
+        if os.path.exists(self.cache_file):
+            try:
+                with open(self.cache_file, "r", encoding="utf-8") as f:
+                    self.cache = json.load(f)
+            except Exception:
+                self.cache = {}
+        else:
+            self.cache = {}
+
+    def _save_cache(self):
+        try:
+            with open(self.cache_file, "w", encoding="utf-8") as f:
+                json.dump(self.cache, f, ensure_ascii=False, indent=4)
+        except Exception as e:
+            logger.error(f"Failed to save text cache: {e}")
 
     def _g4f_call(self, prompt: str, system_message: str) -> str:
         import g4f
@@ -60,6 +82,11 @@ class AIService:
         """
         Generates a personalized follow-up message with fallback logic.
         """
+        cache_key = hashlib.md5(customer.interaction_history.encode("utf-8")).hexdigest()
+        if cache_key in self.cache:
+            logger.info(f"Reusing cached text for: {customer.interaction_history[:30]}...")
+            return self.cache[cache_key]
+
         prompt = f"""
         Generate a highly professional, personalized outreach voice note transcript for WhatsApp.
         Interaction History: {customer.interaction_history}
@@ -96,6 +123,8 @@ class AIService:
                 system_message="You are a professional outreach assistant."
             )
             logger.info(f"Generated message for {customer.name} via {self.provider}")
+            self.cache[cache_key] = message
+            self._save_cache()
             return message
         except Exception as e:
             logger.error(f"Processing Error for {customer.name}: {str(e)}")
