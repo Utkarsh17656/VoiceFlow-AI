@@ -90,7 +90,7 @@ class VoiceService:
             "stream": False,
             "voice_setting": {
                 "voice_id": self.mm_voice_id,
-                "speed": 1.0,
+                "speed": 0.95,
                 "vol": 3,
                 "pitch": 0
             },
@@ -160,7 +160,7 @@ class VoiceService:
                 "similarity_boost": 0.85,
                 "style": 0.5,
                 "use_speaker_boost": True,
-                "speed": 0.75
+                "speed": 0.70
             }
         }
         
